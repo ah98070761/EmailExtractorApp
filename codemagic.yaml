@@ -1,16 +1,15 @@
 workflows:
   android-workflow:
     name: Android Debug Build
-    environment:
-      groups:
-        - android
+    environment: {}
     scripts:
       - name: Build Android APK
         script: |
+          gradle clean
           gradle assembleDebug
     artifacts:
       - app/build/outputs/apk/**/*.apk
     publishing:
       email:
         recipients:
-          - ah9807076@gmail.com # Your actual email
+          - ah9807076@gmail.com # Replace with your actual email
