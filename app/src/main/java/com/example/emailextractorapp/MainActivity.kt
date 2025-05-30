@@ -27,19 +27,18 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        urlInput = findViewById(R.id.urlInput) ?: run {
-            resultText = TextView(this).apply { text = "Error: URL input not found" }
-            setContentView(resultText)
-            return
-        }
-        startUrlInput = findViewById(R.id.startUrlInput) ?: run { resultText = TextView(this).apply { text = "Error: Start input not found" }; setContentView(resultText); return }
-        endUrlInput = findViewById(R.id.endUrlInput) ?: run { resultText = TextView(this).apply { text = "Error: End input not found" }; setContentView(resultText); return }
-        extractButton = findViewById(R.id.extractButton) ?: run { resultText = TextView(this).apply { text = "Error: Extract button not found" }; setContentView(resultText); return }
-        removeAllButton = findViewById(R.id.removeAllButton) ?: run { resultText = TextView(this).apply { text = "Error: Remove button not found" }; setContentView(resultText); return }
-        resultText = findViewById(R.id.resultText) ?: run { resultText = TextView(this).apply { text = "Error: Result text not found" }; setContentView(resultText); return }
+        // Initialize views with null checks
+        urlInput = findViewById(R.id.urlInput) ?: return showError("URL input not found")
+        startUrlInput = findViewById(R.id.startUrlInput) ?: return showError("Start input not found")
+        endUrlInput = findViewById(R.id.endUrlInput) ?: return showError("End input not found")
+        extractButton = findViewById(R.id.extractButton) ?: return showError("Extract button not found")
+        removeAllButton = findViewById(R.id.removeAllButton) ?: return showError("Remove button not found")
+        resultText = findViewById(R.id.resultText) ?: return showError("Result text not found")
 
-        resultText.text = loadResults()
+        // Load existing results
+        resultText.text = loadResults() ?: ""
 
+        // Set button listeners
         extractButton.setOnClickListener {
             val singleUrl = urlInput.text.toString().trim()
             val startUrl = startUrlInput.text.toString().trim()
@@ -66,24 +65,27 @@ class MainActivity : AppCompatActivity() {
 
         removeAllButton.setOnClickListener {
             resultText.text = ""
-            if (resultsFile.exists()) {
-                if (!resultsFile.delete()) {
-                    resultText.append("\nError: Failed to delete results file")
-                }
+            if (resultsFile.exists() && !resultsFile.delete()) {
+                resultText.append("\nError: Failed to delete results file")
             }
         }
+    }
+
+    private fun showError(message: String) {
+        setContentView(TextView(this).apply { text = message })
     }
 
     private fun extractEmails(url: String) {
         Thread {
             try {
-                Thread.sleep(5000) // Wait 5 seconds for email protection
+                // Reduced delay for Android 9 compatibility
+                Thread.sleep(2000) // 2 seconds; adjust as needed
                 val doc = Jsoup.connect(url).get()
                 val emails = findEmails(doc.body().text())
 
                 handler.post {
                     if (emails.isNotEmpty()) {
-                        val currentResults = loadResults()
+                        val currentResults = loadResults() ?: ""
                         val newResults = if (currentResults.isNotEmpty()) "$currentResults\n${emails.joinToString("\n")}" else emails.joinToString("\n")
                         resultText.text = newResults
                         saveResults(newResults)
@@ -95,6 +97,8 @@ class MainActivity : AppCompatActivity() {
                 handler.post { resultText.append("\nError fetching $url: ${e.message}") }
             } catch (e: InterruptedException) {
                 handler.post { resultText.append("\nError: Extraction interrupted for $url") }
+            } catch (e: Exception) {
+                handler.post { resultText.append("\nUnexpected error: ${e.message}") }
             }
         }.start()
     }
@@ -108,17 +112,18 @@ class MainActivity : AppCompatActivity() {
         return str.isNotEmpty() && str.all { it.isDigit() }
     }
 
-    private fun loadResults(): String {
+    private fun loadResults(): String? {
         return try {
-            if (resultsFile.exists()) resultsFile.readText() else ""
+            if (resultsFile.exists()) resultsFile.readText() else null
         } catch (e: IOException) {
-            "Error loading results: ${e.message}"
+            handler.post { resultText.append("\nError loading results: ${e.message}") }
+            null
         }
     }
 
     private fun saveResults(results: String) {
         try {
-            FileOutputStream(resultsFile, false).use { output -> // Changed to false to overwrite file
+            FileOutputStream(resultsFile, false).use { output ->
                 output.write(results.toByteArray())
             }
         } catch (e: IOException) {
