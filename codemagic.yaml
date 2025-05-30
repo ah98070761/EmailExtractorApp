@@ -3,10 +3,13 @@ workflows:
     name: Android Debug Build
     environment: {}
     scripts:
+      - name: Set Gradle Wrapper Permissions
+        script: |
+          chmod +x gradlew
       - name: Build Android APK
         script: |
-          gradle clean
-          gradle assembleDebug
+          ./gradlew clean
+          ./gradlew assembleDebug
     artifacts:
       - app/build/outputs/apk/**/*.apk
     publishing:
