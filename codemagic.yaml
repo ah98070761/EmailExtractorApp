@@ -5,6 +5,9 @@ workflows:
       groups:
         - android
     scripts:
+      - name: Set Gradle Wrapper Permissions
+        script: |
+          chmod +x gradlew
       - name: Build Android APK
         script: |
           ./gradlew assembleDebug
@@ -13,4 +16,4 @@ workflows:
     publishing:
       email:
         recipients:
-          - ah9807076@gmail.com # Replace with your actual email address
+          - ah9807076@gmail.com # Replace with your actual email
