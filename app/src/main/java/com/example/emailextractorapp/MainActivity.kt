@@ -1,103 +1,111 @@
 package com.example.emailextractorapp
 
-import android.content.Intent
 import android.os.Bundle
-import android.webkit.WebView
-import android.webkit.WebViewClient
+import android.os.Handler
+import android.os.Looper
 import android.widget.Button
 import android.widget.EditText
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
+import androidx.core.text.isDigitsOnly
 import org.jsoup.Jsoup
-import java.util.regex.Pattern
+import java.io.File
+import java.io.FileOutputStream
+import java.io.IOException
 
 class MainActivity : AppCompatActivity() {
-    private lateinit var webView: WebView
+
     private lateinit var urlInput: EditText
+    private lateinit var startUrlInput: EditText
+    private lateinit var endUrlInput: EditText
     private lateinit var extractButton: Button
-    private lateinit var exportButton: Button
-    private lateinit var emailOutput: TextView
-    private val emailList = mutableListOf<String>()
+    private lateinit var removeAllButton: Button
+    private lateinit var resultText: TextView
+    private val resultsFile = File(filesDir, "email_results.txt")
+    private val handler = Handler(Looper.getMainLooper())
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        // Initialize views
         urlInput = findViewById(R.id.urlInput)
+        startUrlInput = findViewById(R.id.startUrlInput)
+        endUrlInput = findViewById(R.id.endUrlInput)
         extractButton = findViewById(R.id.extractButton)
-        exportButton = findViewById(R.id.exportButton)
-        emailOutput = findViewById(R.id.emailOutput)
-        webView = findViewById(R.id.webView)
+        removeAllButton = findViewById(R.id.removeAllButton)
+        resultText = findViewById(R.id.resultText)
 
-        // Configure WebView
-        webView.settings.javaScriptEnabled = true
-        webView.webViewClient = object : WebViewClient() {
-            override fun onPageFinished(view: WebView?, url: String?) {
-                super.onPageFinished(view, url)
-                url?.let { extractEmails(it) }
-            }
-        }
+        // Load existing results
+        resultText.text = loadResults()
 
-        // Extract button click
         extractButton.setOnClickListener {
-            val url = urlInput.text.toString().trim()
-            if (url.isNotEmpty()) {
-                val validUrl = if (!url.startsWith("http://") && !url.startsWith("https://")) {
-                    "https://$url"
-                } else {
-                    url
+            val singleUrl = urlInput.text.toString()
+            val startUrl = startUrlInput.text.toString()
+            val endUrl = endUrlInput.text.toString()
+
+            if (singleUrl.isNotEmpty()) {
+                extractEmails(singleUrl)
+            } else if (startUrl.isNotEmpty() && endUrl.isNotEmpty() && isNumeric(startUrl) && isNumeric(endUrl)) {
+                val start = startUrl.toInt()
+                val end = endUrl.toInt()
+                if (start <= end) {
+                    for (i in start..end) {
+                        val rangeUrl = urlInput.text.toString().replace(Regex("/\\d+/?$"), "/$i/")
+                        extractEmails(rangeUrl)
+                    }
                 }
-                webView.loadUrl(validUrl)
-            } else {
-                emailOutput.text = "Please enter a valid URL."
             }
         }
 
-        // Export button click
-        exportButton.setOnClickListener {
-            if (emailList.isNotEmpty()) {
-                val emailIntent = Intent(Intent.ACTION_SEND).apply {
-                    type = "text/plain"
-                    putExtra(Intent.EXTRA_SUBJECT, "Extracted Emails")
-                    putExtra(Intent.EXTRA_TEXT, emailList.joinToString("\n"))
-                }
-                startActivity(Intent.createChooser(emailIntent, "Send Emails via"))
-            } else {
-                emailOutput.text = "No emails to export."
-            }
+        removeAllButton.setOnClickListener {
+            resultText.text = ""
+            resultsFile.delete()
         }
     }
 
     private fun extractEmails(url: String) {
-        CoroutineScope(Dispatchers.IO).launch {
+        Thread {
             try {
+                // Simulate delay for email protection (e.g., JavaScript loading)
+                Thread.sleep(5000) // Wait 5 seconds; adjust based on site
                 val doc = Jsoup.connect(url).get()
-                val text = doc.text()
-                val emailPattern = Pattern.compile("[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}")
-                val matcher = emailPattern.matcher(text)
-                emailList.clear()
+                val emails = doc.body().text().findAllEmails()
 
-                while (matcher.find()) {
-                    emailList.add(matcher.group())
+                handler.post {
+                    val currentResults = loadResults()
+                    val newResults = if (currentResults.isNotEmpty()) "$currentResults\n${emails.joinToString("\n")}" else emails.joinToString("\n")
+                    resultText.text = newResults
+                    saveResults(newResults)
                 }
-
-                withContext(Dispatchers.Main) {
-                    emailOutput.text = if (emailList.isEmpty()) {
-                        "No emails found."
-                    } else {
-                        "Extracted Emails:\n${emailList.joinToString("\n")}"
-                    }
-                }
-            } catch (e: Exception) {
-                withContext(Dispatchers.Main) {
-                    emailOutput.text = "Error: ${e.message}"
-                }
+            } catch (e: IOException) {
+                handler.post { resultText.append("\nError fetching $url: ${e.message}") }
             }
+        }.start()
+    }
+
+    private fun String.findAllEmails(): List<String> {
+        val emailRegex = Regex("[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}")
+        return emailRegex.findAll(this).map { it.value }.toList()
+    }
+
+    private fun isNumeric(str: String): Boolean {
+        return str.isNotEmpty() && str.all { it.isDigit() }
+    }
+
+    private fun loadResults(): String {
+        return if (resultsFile.exists()) resultsFile.readText() else ""
+    }
+
+    private fun saveResults(results: String) {
+        try {
+            FileOutputStream(resultsFile, true).use { output ->
+                output.write(results.toByteArray())
+            }
+        } catch (e: IOException) {
+            e.printStackTrace()
         }
     }
 }
+
+// Extension function to find emails
+fun String.findAllEmails(): List<String> = this.findAllEmails()
