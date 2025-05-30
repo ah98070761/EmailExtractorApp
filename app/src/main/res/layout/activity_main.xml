@@ -9,40 +9,43 @@
         android:id="@+id/urlInput"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:hint="Enter URL (e.g., https://example.com)"
+        android:hint="Enter URL (e.g., https://ex.com/1)"
         android:inputType="textUri" />
 
-    <LinearLayout
+    <EditText
+        android:id="@+id/startUrlInput"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="horizontal">
+        android:hint="Start Number (e.g., 1)"
+        android:inputType="number" />
 
-        <Button
-            android:id="@+id/extractButton"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:text="Extract Emails" />
-
-        <Button
-            android:id="@+id/exportButton"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:text="Export Emails" />
-    </LinearLayout>
-
-    <WebView
-        android:id="@+id/webView"
+    <EditText
+        android:id="@+id/endUrlInput"
         android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="1" />
+        android:layout_height="wrap_content"
+        android:hint="End Number (e.g., 100)"
+        android:inputType="number" />
+
+    <Button
+        android:id="@+id/extractButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Extract Emails"
+        android:layout_gravity="center" />
+
+    <Button
+        android:id="@+id/removeAllButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Remove All Results"
+        android:layout_gravity="center" />
 
     <TextView
-        android:id="@+id/emailOutput"
+        android:id="@+id/resultText"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="8dp"
-        android:text="Extracted Emails:" />
-
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:text=""
+        android:scrollbars="vertical"
+        android:padding="8dp" />
 </LinearLayout>
