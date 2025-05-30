@@ -4,8 +4,6 @@ workflows:
     environment:
       groups:
         - android
-      android:
-        build_type: debug
     scripts:
       - name: Build Android APK
         script: |
@@ -15,4 +13,4 @@ workflows:
     publishing:
       email:
         recipients:
-          - ah9807076@gmail.com # Replace with your email address
+          - ah9807076@gmail.com # Replace with your actual email address
