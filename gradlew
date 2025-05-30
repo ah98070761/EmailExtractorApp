@@ -35,19 +35,27 @@
 #         * expansions «$var», «${var}», «${var:-default}», «${var##pattern}»,
 #           «${#var}», and «$(...)»;
 #         * compound commands having a testable exit status, especially «case»;
-#         * various built-in commands including basic ones.
+#         * various built-in commands including «command», «set», and «ulimit».
 #
 #   Important for patching:
 #
 #   (2) This script targets any POSIX-compliant shell running on a POSIX-compliant
-#       platform.
+#       platform, including UNIX, Linux, macOS, and Cygwin on Windows.
 #
-#   (3) This script forks itself to run in a JVM. To debug problems with this
+#   (3) This script targets POSIX features only that were introduced in the early
+#       1990s, to keep it compatible with a wide range of systems, including
+#       Solaris, AIX, and HP-UX.
+#
+#   (4) This script forks itself to run in a JVM. To debug problems with this
 #       script, you can bypass the JVM by setting JAVA_HOME to empty and running
-#       this script in a shell that supports debugging, like:
+#       this script in a shell that supports the «set -x» option, like:
 #
 #           JAVA_HOME= sh -x gradlew
 #
+#   (5) Do not use non-POSIX shell features like «[[...]]», «let», or «$(<file)».
+#       Similarly, do not use «bash» arrays or other bash-only features.
+#
+##############################################################################
 
 # Attempt to set APP_HOME
 
@@ -189,6 +197,9 @@ fi
 set -u
 # Set default JVM options if necessary
 [ -z "${DEFAULT_JVM_OPTS+x}" ] && DEFAULT_JVM_OPTS='"-Xmx64m" "-Xms64m"'
+# Ensure JAVA_OPTS and GRADLE_OPTS are defined to avoid unbound variable errors
+[ -z "${JAVA_OPTS+x}" ] && JAVA_OPTS=""
+[ -z "${GRADLE_OPTS+x}" ] && GRADLE_OPTS=""
 
 # Combine JVM options, ensuring they are properly quoted
 # Since we're in /bin/sh, we can't use arrays, so we use a string
