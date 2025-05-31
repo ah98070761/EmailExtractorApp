@@ -24,12 +24,12 @@ class RangeUrlActivity : AppCompatActivity() {
     private lateinit var startIdInput: EditText
     private lateinit var endIdInput: EditText
     private lateinit var delayInput: EditText
-    private lateinit setDelayButton: Button
-    private lateinit extractButton: Button
-    private lateinit extractResultsButton: Button
-    private lateinit deleteResultsButton: Button
-    private lateinit resultText: TextView
-    private lateinit switchButton: Button
+    private lateinit var setDelayButton: Button
+    private lateinit var extractButton: Button
+    private lateinit var extractResultsButton: Button
+    private lateinit var deleteResultsButton: Button
+    private lateinit var resultText: TextView
+    private lateinit var switchButton: Button
     private val handler = Handler(Looper.getMainLooper())
     private var delaySeconds: Long = 0
 
