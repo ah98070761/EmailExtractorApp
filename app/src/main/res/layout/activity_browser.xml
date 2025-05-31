@@ -1,163 +1,161 @@
 <?xml version="1.0" encoding="utf-8"?>
-<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="match_parent"
+    android:orientation="vertical">
 
-    <LinearLayout
+    <!-- Scrollable controls section -->
+    <ScrollView
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:padding="16dp">
+        android:layout_height="wrap_content">
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="horizontal">
+            android:orientation="vertical"
+            android:padding="16dp">
 
+            <!-- URL Input & Go Button -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
+                <EditText
+                    android:id="@+id/browserUrlInput"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:hint="Browse URL"
+                    android:inputType="textUri"
+                    android:maxLines="1" />
+                <Button
+                    android:id="@+id/goButton"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Go"
+                    android:layout_marginStart="8dp" />
+            </LinearLayout>
+
+            <!-- Delay Input -->
             <EditText
-                android:id="@+id/browserUrlInput"
-                android:layout_width="0dp"
+                android:id="@+id/delayInput"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:hint="Browse URL"
-                android:inputType="textUri"
-                android:layout_weight="1"
+                android:hint="Delay (sec)"
+                android:inputType="number"
                 android:maxLines="1" />
-
             <Button
-                android:id="@+id/goButton"
+                android:id="@+id/setDelayButton"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Go"
-                android:layout_marginStart="8dp" />
+                android:text="Set Delay" />
+
+            <!-- Range Settings -->
+            <EditText
+                android:id="@+id/rangeBaseUrlInput"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="Range Base URL"
+                android:inputType="textUri"
+                android:maxLines="1" />
+            <EditText
+                android:id="@+id/rangeBeforeIdInput"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="Before ID"
+                android:inputType="text"
+                android:maxLines="1" />
+            <EditText
+                android:id="@+id/rangeAfterIdInput"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="After ID"
+                android:inputType="text"
+                android:maxLines="1" />
+            <EditText
+                android:id="@+id/rangeStartIdInput"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="Start ID"
+                android:inputType="number"
+                android:maxLines="1" />
+            <EditText
+                android:id="@+id/rangeEndIdInput"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="End ID"
+                android:inputType="number"
+                android:maxLines="1" />
+            <Button
+                android:id="@+id/extractRangeButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Extract Range" />
+
+            <!-- Progress Bar -->
+            <ProgressBar
+                android:id="@+id/progressBar"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:visibility="gone" />
+
+            <!-- Mode Toggle Buttons -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center">
+                <Button
+                    android:id="@+id/switchSingleButton"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Switch to Single" />
+                <Button
+                    android:id="@+id/switchRangeButton"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Switch to Range"
+                    android:layout_marginStart="8dp" />
+            </LinearLayout>
+
+            <!-- Action Buttons -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center">
+                <Button
+                    android:id="@+id/extractResultsButton"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Share Results" />
+                <Button
+                    android:id="@+id/deleteResultsButton"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Delete Results"
+                    android:layout_marginStart="8dp" />
+            </LinearLayout>
         </LinearLayout>
+    </ScrollView>
 
-        <WebView
-            android:id="@+id/webView"
-            android:layout_width="match_parent"
-            android:layout_height="300dp"
-            android:layout_weight="3"
-            android:minHeight="400dp"
-            android:scrollbars="vertical" />
+    <!-- Full-screen WebView -->
+    <WebView
+        android:id="@+id/webView"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="2"
+        android:scrollbars="vertical" />
 
-        <EditText
-            android:id="@+id/delayInput"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:hint="Delay (sec)"
-            android:inputType="number"
-            android:layout_weight="1"
-            android:maxLines="1" />
-
-        <Button
-            android:id="@+id/setDelayButton"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Set Delay" />
-
-        <EditText
-            android:id="@+id/rangeBaseUrlInput"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:hint="Range Base URL"
-            android:inputType="textUri"
-            android:layout_weight="1"
-            android:maxLines="1" />
-
-        <EditText
-            android:id="@+id/rangeBeforeIdInput"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:hint="Before ID"
-            android:inputType="text"
-            android:layout_weight="1"
-            android:maxLines="1" />
-
-        <EditText
-            android:id="@+id/rangeAfterIdInput"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:hint="After ID"
-            android:inputType="text"
-            android:layout_weight="1"
-            android:maxLines="1" />
-
-        <EditText
-            android:id="@+id/rangeStartIdInput"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:hint="Start ID"
-            android:inputType="number"
-            android:layout_weight="1"
-            android:maxLines="1" />
-
-        <EditText
-            android:id="@+id/rangeEndIdInput"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:hint="End ID"
-            android:inputType="number"
-            android:layout_weight="1"
-            android:maxLines="1" />
-
-        <Button
-            android:id="@+id/extractRangeButton"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Extract Range" />
-
-        <ProgressBar
-            android:id="@+id/progressBar"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:visibility="gone"
-            android:layout_gravity="center" />
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:gravity="center">
-
-            <Button
-                android:id="@+id/switchSingleButton"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Switch to Single" />
-
-            <Button
-                android:id="@+id/switchRangeButton"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Switch to Range"
-                android:layout_marginStart="8dp" />
-        </LinearLayout>
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:gravity="center">
-
-            <Button
-                android:id="@+id/extractResultsButton"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Share Results" />
-
-            <Button
-                android:id="@+id/deleteResultsButton"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Delete Results"
-                android:layout_marginStart="8dp" />
-        </LinearLayout>
-
+    <!-- Scrollable Results Output -->
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1">
         <TextView
             android:id="@+id/resultText"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text=""
-            android:scrollbars="vertical"
             android:padding="8dp" />
-    </LinearLayout>
-</ScrollView>
+    </ScrollView>
+</LinearLayout>
