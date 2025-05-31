@@ -12,6 +12,7 @@ import android.webkit.WebViewClient
 import android.widget.Button
 import android.widget.EditText
 import android.widget.ProgressBar
+import android.widget.ScrollView
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
@@ -35,6 +36,7 @@ class BrowserActivity : AppCompatActivity() {
     private lateinit var shareResultsButton: Button
     private lateinit var deleteResultsButton: Button
     private lateinit var resultText: TextView
+    private lateinit var resultScrollView: ScrollView
     private lateinit var switchSingleButton: Button
     private lateinit var switchRangeButton: Button
     private lateinit var progressBar: ProgressBar
@@ -61,6 +63,7 @@ class BrowserActivity : AppCompatActivity() {
         shareResultsButton = findViewById(R.id.extractResultsButton) ?: return showError("Share results button not found")
         deleteResultsButton = findViewById(R.id.deleteResultsButton) ?: return showError("Delete results button not found")
         resultText = findViewById(R.id.resultText) ?: return showError("Result text not found")
+        resultScrollView = resultText.parent as ScrollView // Access the ScrollView parent
         switchSingleButton = findViewById(R.id.switchSingleButton) ?: return showError("Switch single button not found")
         switchRangeButton = findViewById(R.id.switchRangeButton) ?: return showError("Switch range button not found")
         progressBar = findViewById(R.id.progressBar) ?: return showError("Progress bar not found")
@@ -72,7 +75,7 @@ class BrowserActivity : AppCompatActivity() {
             setInitialScale(1)
             isHorizontalScrollBarEnabled = true
             isVerticalScrollBarEnabled = true
-            isScrollContainer = false // Prevent WebView from interfering with ScrollView
+            isScrollContainer = false
         }
 
         resultText.text = loadResults() ?: ""
@@ -92,7 +95,7 @@ class BrowserActivity : AppCompatActivity() {
                 webView.webViewClient = createWebViewClient()
                 webView.loadUrl(if (url.startsWith("http")) url else "https://$url")
             } else {
-                resultText.append("\nError: Please enter a URL")
+                appendResult("\nError: Please enter a URL")
             }
         }
 
@@ -122,10 +125,10 @@ class BrowserActivity : AppCompatActivity() {
                         isExtractingRange = false
                     }
                 } else {
-                    resultText.append("\nError: Start ID must be less than or equal to end ID")
+                    appendResult("\nError: Start ID must be less than or equal to end ID")
                 }
             } else {
-                resultText.append("\nError: Invalid ID range")
+                appendResult("\nError: Invalid ID range")
             }
         }
 
@@ -172,7 +175,7 @@ class BrowserActivity : AppCompatActivity() {
                 error: WebResourceError?
             ) {
                 handler.post {
-                    resultText.append("\nError fetching ${request?.url}: ${error?.description}")
+                    appendResult("\nError fetching ${request?.url}: ${error?.description}")
                     progressBar.visibility = View.GONE
                     goButton.isEnabled = true
                 }
@@ -186,7 +189,7 @@ class BrowserActivity : AppCompatActivity() {
                 failingUrl: String?
             ) {
                 handler.post {
-                    resultText.append("\nError fetching $failingUrl: $description")
+                    appendResult("\nError fetching $failingUrl: $description")
                     progressBar.visibility = View.GONE
                     goButton.isEnabled = true
                 }
@@ -221,17 +224,29 @@ class BrowserActivity : AppCompatActivity() {
                     if (emails.isNotEmpty()) {
                         currentResults.addAll(emails)
                         resultText.text = currentResults.joinToString("\n")
+                        scrollResultToBottom()
                     } else {
-                        resultText.append("\nNo emails found at $url")
+                        appendResult("\nNo emails found at $url")
                     }
                     onComplete()
                 }
             } else {
                 handler.post {
-                    resultText.append("\nError: Unable to load page content at $url")
+                    appendResult("\nError: Unable to load page content at $url")
                     onComplete()
                 }
             }
+        }
+    }
+
+    private fun appendResult(message: String) {
+        resultText.append(message)
+        scrollResultToBottom()
+    }
+
+    private fun scrollResultToBottom() {
+        resultScrollView.post {
+            resultScrollView.fullScroll(View.FOCUS_DOWN)
         }
     }
 
