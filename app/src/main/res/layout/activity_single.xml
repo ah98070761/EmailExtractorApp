@@ -9,8 +9,24 @@
         android:id="@+id/urlInput"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:hint="Enter URL (e.g., https://example.com)"
+        android:hint="Enter Single URL (e.g., https://example.com)"
         android:inputType="textUri" />
+
+    <EditText
+        android:id="@+id/multiUrlInput"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Enter Multiple URLs (one per line)"
+        android:inputType="textMultiLine"
+        android:lines="3"
+        android:gravity="top" />
+
+    <Button
+        android:id="@+id/uploadFileButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Upload URL File"
+        android:layout_gravity="center" />
 
     <EditText
         android:id="@+id/delayInput"
@@ -41,10 +57,17 @@
         android:layout_gravity="center" />
 
     <Button
-        android:id="@+id/switchButton"
+        android:id="@+id/switchRangeButton"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Switch to Range"
+        android:layout_gravity="center" />
+
+    <Button
+        android:id="@+id/switchBrowserButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Switch to Browser"
         android:layout_gravity="center" />
 
     <Button
