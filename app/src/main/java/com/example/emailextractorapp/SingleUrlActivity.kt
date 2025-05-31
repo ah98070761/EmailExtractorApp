@@ -6,6 +6,8 @@ import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
 import android.view.View
+import android.webkit.WebResourceError
+import android.webkit.WebResourceRequest
 import android.webkit.WebView
 import android.webkit.WebViewClient
 import android.widget.Button
@@ -205,9 +207,26 @@ class SingleUrlActivity : AppCompatActivity() {
                         }, delaySeconds)
                     }
 
-                    override fun onReceivedError(view: WebView?, errorCode: Int, description: String?, failingUrl: String?) {
+                    override fun onReceivedError(
+                        view: WebView?,
+                        request: WebResourceRequest?,
+                        error: WebResourceError?
+                    ) {
                         handler.post {
-                            resultText.append("\nError fetching $url: $description")
+                            resultText.append("\nError fetching ${request?.url}: ${error?.description}")
+                            onComplete()
+                        }
+                    }
+
+                    @Suppress("DEPRECATION")
+                    override fun onReceivedError(
+                        view: WebView?,
+                        errorCode: Int,
+                        description: String?,
+                        failingUrl: String?
+                    ) {
+                        handler.post {
+                            resultText.append("\nError fetching $failingUrl: $description")
                             onComplete()
                         }
                     }
