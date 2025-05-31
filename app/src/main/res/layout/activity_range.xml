@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:padding="16dp">
+
+    <EditText
+        android:id="@+id/baseUrlInput"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Base URL (e.g., https://example.com/)"
+        android:inputType="textUri" />
+
+    <EditText
+        android:id="@+id/beforeIdInput"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Text before ID (e.g., page)"
+        android:inputType="text" />
+
+    <EditText
+        android:id="@+id/afterIdInput"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Text after ID (e.g., .html)"
+        android:inputType="text" />
+
+    <EditText
+        android:id="@+id/startIdInput"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Start ID (e.g., 1)"
+        android:inputType="number" />
+
+    <EditText
+        android:id="@+id/endIdInput"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="End ID (e.g., 100)"
+        android:inputType="number" />
+
+    <Button
+        android:id="@+id/extractButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Extract Emails"
+        android:layout_gravity="center" />
+
+    <Button
+        android:id="@+id/switchButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Switch to Single"
+        android:layout_gravity="center" />
+
+    <TextView
+        android:id="@+id/resultText"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:text=""
+        android:scrollbars="vertical"
+        android:padding="8dp" />
+</LinearLayout>
