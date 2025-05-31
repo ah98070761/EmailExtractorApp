@@ -12,6 +12,20 @@
         android:hint="Enter URL (e.g., https://example.com)"
         android:inputType="textUri" />
 
+    <EditText
+        android:id="@+id/delayInput"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Delay in seconds (e.g., 5)"
+        android:inputType="number" />
+
+    <Button
+        android:id="@+id/setDelayButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Set Protection Delay"
+        android:layout_gravity="center" />
+
     <Button
         android:id="@+id/extractButton"
         android:layout_width="wrap_content"
@@ -24,6 +38,20 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Switch to Range"
+        android:layout_gravity="center" />
+
+    <Button
+        android:id="@+id/extractResultsButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Extract Results to File"
+        android:layout_gravity="center" />
+
+    <Button
+        android:id="@+id/deleteResultsButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Delete Results"
         android:layout_gravity="center" />
 
     <TextView
