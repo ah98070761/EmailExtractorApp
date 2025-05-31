@@ -2,13 +2,14 @@ package com.example.emailextractorapp
 
 import android.content.Intent
 import android.os.Bundle
-import android.os.Environment
 import android.os.Handler
 import android.os.Looper
+import android.view.View
 import android.webkit.WebView
 import android.webkit.WebViewClient
 import android.widget.Button
 import android.widget.EditText
+import android.widget.ProgressBar
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
@@ -26,6 +27,7 @@ class SingleUrlActivity : AppCompatActivity() {
     private lateinit var deleteResultsButton: Button
     private lateinit var resultText: TextView
     private lateinit var switchButton: Button
+    private lateinit var progressBar: ProgressBar
     private lateinit var webView: WebView
     private val handler = Handler(Looper.getMainLooper())
     private var delaySeconds: Long = 0
@@ -42,6 +44,7 @@ class SingleUrlActivity : AppCompatActivity() {
         deleteResultsButton = findViewById(R.id.deleteResultsButton) ?: return showError("Delete results button not found")
         resultText = findViewById(R.id.resultText) ?: return showError("Result text not found")
         switchButton = findViewById(R.id.switchButton) ?: return showError("Switch button not found")
+        progressBar = findViewById(R.id.progressBar) ?: return showError("Progress bar not found")
 
         webView = WebView(this).apply {
             settings.javaScriptEnabled = true
@@ -61,7 +64,12 @@ class SingleUrlActivity : AppCompatActivity() {
         extractButton.setOnClickListener {
             val url = urlInput.text.toString().trim()
             if (url.isNotEmpty()) {
-                extractEmails(url)
+                progressBar.visibility = View.VISIBLE
+                extractButton.isEnabled = false // Disable button during extraction
+                extractEmails(url) {
+                    progressBar.visibility = View.GONE
+                    extractButton.isEnabled = true
+                }
             } else {
                 resultText.append("\nError: Please enter a URL")
             }
@@ -91,7 +99,7 @@ class SingleUrlActivity : AppCompatActivity() {
         setContentView(TextView(this).apply { text = message })
     }
 
-    private fun extractEmails(url: String) {
+    private fun extractEmails(url: String, onComplete: () -> Unit) {
         Thread {
             handler.post {
                 webView.loadUrl(url)
@@ -112,10 +120,12 @@ class SingleUrlActivity : AppCompatActivity() {
                                         } else {
                                             resultText.append("\nNo emails found at $url")
                                         }
+                                        onComplete()
                                     }
                                 } else {
                                     handler.post {
                                         resultText.append("\nError: Unable to load page content at $url")
+                                        onComplete()
                                     }
                                 }
                             }
@@ -125,6 +135,7 @@ class SingleUrlActivity : AppCompatActivity() {
                     override fun onReceivedError(view: WebView?, errorCode: Int, description: String?, failingUrl: String?) {
                         handler.post {
                             resultText.append("\nError fetching $url: $description")
+                            onComplete()
                         }
                     }
                 }
