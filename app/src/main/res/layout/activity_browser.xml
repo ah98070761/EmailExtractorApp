@@ -1,0 +1,127 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:padding="16dp">
+
+    <EditText
+        android:id="@+id/browserUrlInput"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Enter URL to browse (e.g., https://example.com)"
+        android:inputType="textUri" />
+
+    <Button
+        android:id="@+id/goButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Go"
+        android:layout_gravity="center" />
+
+    <WebView
+        android:id="@+id/webView"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1" />
+
+    <EditText
+        android:id="@+id/delayInput"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Delay in seconds (e.g., 5)"
+        android:inputType="number" />
+
+    <Button
+        android:id="@+id/setDelayButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Set Protection Delay"
+        android:layout_gravity="center" />
+
+    <EditText
+        android:id="@+id/rangeBaseUrlInput"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Range Base URL (e.g., https://example.com/)"
+        android:inputType="textUri" />
+
+    <EditText
+        android:id="@+id/rangeBeforeIdInput"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Text before ID (e.g., page)"
+        android:inputType="text" />
+
+    <EditText
+        android:id="@+id/rangeAfterIdInput"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Text after ID (e.g., .html)"
+        android:inputType="text" />
+
+    <EditText
+        android:id="@+id/rangeStartIdInput"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Start ID (e.g., 1)"
+        android:inputType="number" />
+
+    <EditText
+        android:id="@+id/rangeEndIdInput"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="End ID (e.g., 100)"
+        android:inputType="number" />
+
+    <Button
+        android:id="@+id/extractRangeButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Extract Range Emails"
+        android:layout_gravity="center" />
+
+    <ProgressBar
+        android:id="@+id/progressBar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:visibility="gone"
+        android:layout_gravity="center" />
+
+    <Button
+        android:id="@+id/switchSingleButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Switch to Single"
+        android:layout_gravity="center" />
+
+    <Button
+        android:id="@+id/switchRangeButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Switch to Range"
+        android:layout_gravity="center" />
+
+    <Button
+        android:id="@+id/extractResultsButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Share Results"
+        android:layout_gravity="center" />
+
+    <Button
+        android:id="@+id/deleteResultsButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Delete Results"
+        android:layout_gravity="center" />
+
+    <TextView
+        android:id="@+id/resultText"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:text=""
+        android:scrollbars="vertical"
+        android:padding="8dp" />
+</LinearLayout>
