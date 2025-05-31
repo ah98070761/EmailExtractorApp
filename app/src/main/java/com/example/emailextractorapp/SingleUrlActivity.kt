@@ -1,5 +1,6 @@
 package com.example.emailextractorapp
 
+import android.content.Intent
 import android.os.Bundle
 import android.os.Environment
 import android.os.Handler
@@ -40,9 +41,8 @@ class SingleUrlActivity : AppCompatActivity() {
         resultText = findViewById(R.id.resultText) ?: return showError("Result text not found")
         switchButton = findViewById(R.id.switchButton) ?: return showError("Switch button not found")
 
-        // Initialize WebView (hidden, used for rendering pages)
         webView = WebView(this).apply {
-            settings.javaScriptEnabled = true // Enable JavaScript to load protected emails
+            settings.javaScriptEnabled = true
             settings.domStorageEnabled = true
             settings.userAgentString = "Mozilla/5.0 (Android; Mobile; rv:68.0) Gecko/68.0 Firefox/68.0"
             webViewClient = WebViewClient()
@@ -95,12 +95,10 @@ class SingleUrlActivity : AppCompatActivity() {
                 webView.loadUrl(url)
                 webView.webViewClient = object : WebViewClient() {
                     override fun onPageFinished(view: WebView?, url: String?) {
-                        // Wait for the delay (if set) to allow JavaScript to load emails
                         handler.postDelayed({
-                            // Extract the HTML content after the page is fully rendered
                             webView.evaluateJavascript("(function() { return document.body.innerText; })();") { result ->
                                 if (result != null && result != "null") {
-                                    val pageText = result.replace("\"", "") // Remove quotes from JavaScript result
+                                    val pageText = result.replace("\"", "")
                                     val emails = findEmails(pageText)
 
                                     handler.post {
@@ -166,6 +164,6 @@ class SingleUrlActivity : AppCompatActivity() {
 
     override fun onDestroy() {
         super.onDestroy()
-        webView.destroy() // Clean up WebView to avoid memory leaks
+        webView.destroy()
     }
 }
