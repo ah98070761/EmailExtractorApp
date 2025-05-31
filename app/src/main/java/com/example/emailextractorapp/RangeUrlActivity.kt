@@ -30,12 +30,13 @@ class RangeUrlActivity : AppCompatActivity() {
     private lateinit var shareResultsButton: Button
     private lateinit var deleteResultsButton: Button
     private lateinit var resultText: TextView
-    private lateinit var switchButton: Button
+    private lateinit var switchSingleButton: Button
+    private lateinit var switchBrowserButton: Button
     private lateinit var progressBar: ProgressBar
     private lateinit var webView: WebView
     private val handler = Handler(Looper.getMainLooper())
     private var delaySeconds: Long = 0
-    private var currentResults = mutableSetOf<String>() // To store unique emails
+    private var currentResults = mutableSetOf<String>()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -52,7 +53,8 @@ class RangeUrlActivity : AppCompatActivity() {
         shareResultsButton = findViewById(R.id.extractResultsButton) ?: return showError("Share results button not found")
         deleteResultsButton = findViewById(R.id.deleteResultsButton) ?: return showError("Delete results button not found")
         resultText = findViewById(R.id.resultText) ?: return showError("Result text not found")
-        switchButton = findViewById(R.id.switchButton) ?: return showError("Switch button not found")
+        switchSingleButton = findViewById(R.id.switchSingleButton) ?: return showError("Switch single button not found")
+        switchBrowserButton = findViewById(R.id.switchBrowserButton) ?: return showError("Switch browser button not found")
         progressBar = findViewById(R.id.progressBar) ?: return showError("Progress bar not found")
 
         webView = WebView(this).apply {
@@ -63,6 +65,7 @@ class RangeUrlActivity : AppCompatActivity() {
         }
 
         resultText.text = loadResults() ?: ""
+        currentResults.addAll(resultText.text.split("\n").filter { it.isNotEmpty() })
 
         setDelayButton.setOnClickListener {
             val delay = delayInput.text.toString().trim()
@@ -83,12 +86,12 @@ class RangeUrlActivity : AppCompatActivity() {
                 if (start <= end) {
                     progressBar.visibility = View.VISIBLE
                     extractButton.isEnabled = false
-                    currentResults.clear() // Clear previous results for this extraction
-                    resultText.text = "" // Clear the display
+                    currentResults.clear()
+                    resultText.text = ""
                     val urls = (start..end).map { i ->
                         if (baseUrl.isNotEmpty()) "$baseUrl$beforeId$i$afterId" else "$beforeId$i$afterId"
                     }
-                    progressBar.max = urls.size * 100 // For finer progress updates
+                    progressBar.max = urls.size * 100
                     processUrls(urls, 0) {
                         progressBar.visibility = View.GONE
                         extractButton.isEnabled = true
@@ -117,8 +120,12 @@ class RangeUrlActivity : AppCompatActivity() {
             Toast.makeText(this, "Results deleted", Toast.LENGTH_SHORT).show()
         }
 
-        switchButton.setOnClickListener {
+        switchSingleButton.setOnClickListener {
             startActivity(Intent(this, SingleUrlActivity::class.java))
+        }
+
+        switchBrowserButton.setOnClickListener {
+            startActivity(Intent(this, BrowserActivity::class.java))
         }
     }
 
@@ -137,8 +144,8 @@ class RangeUrlActivity : AppCompatActivity() {
 
         val url = urls[index]
         extractEmails(url) {
-            progressBar.progress = ((index + 1) * 100) // Update progress
-            processUrls(urls, index + 1, onComplete) // Process next URL
+            progressBar.progress = ((index + 1) * 100)
+            processUrls(urls, index + 1, onComplete)
         }
     }
 
@@ -155,7 +162,7 @@ class RangeUrlActivity : AppCompatActivity() {
                                     val emails = findEmails(pageText)
                                     handler.post {
                                         if (emails.isNotEmpty()) {
-                                            currentResults.addAll(emails) // Add unique emails
+                                            currentResults.addAll(emails)
                                             resultText.text = currentResults.joinToString("\n")
                                         } else {
                                             resultText.append("\nNo emails found at $url")
