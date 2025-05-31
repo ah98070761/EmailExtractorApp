@@ -1,19 +1,16 @@
 package com.example.emailextractorapp
 
-import android.app.DownloadManager
-import android.content.Context
-import android.content.Intent
-import android.net.Uri
 import android.os.Bundle
 import android.os.Environment
 import android.os.Handler
 import android.os.Looper
+import android.webkit.WebView
+import android.webkit.WebViewClient
 import android.widget.Button
 import android.widget.EditText
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
-import org.jsoup.Jsoup
 import java.io.File
 
 class RangeUrlActivity : AppCompatActivity() {
@@ -30,6 +27,7 @@ class RangeUrlActivity : AppCompatActivity() {
     private lateinit var deleteResultsButton: Button
     private lateinit var resultText: TextView
     private lateinit var switchButton: Button
+    private lateinit var webView: WebView
     private val handler = Handler(Looper.getMainLooper())
     private var delaySeconds: Long = 0
 
@@ -49,6 +47,13 @@ class RangeUrlActivity : AppCompatActivity() {
         deleteResultsButton = findViewById(R.id.deleteResultsButton) ?: return showError("Delete results button not found")
         resultText = findViewById(R.id.resultText) ?: return showError("Result text not found")
         switchButton = findViewById(R.id.switchButton) ?: return showError("Switch button not found")
+
+        webView = WebView(this).apply {
+            settings.javaScriptEnabled = true
+            settings.domStorageEnabled = true
+            settings.userAgentString = "Mozilla/5.0 (Android; Mobile; rv:68.0) Gecko/68.0 Firefox/68.0"
+            webViewClient = WebViewClient()
+        }
 
         resultText.text = loadResults() ?: ""
 
@@ -107,30 +112,48 @@ class RangeUrlActivity : AppCompatActivity() {
 
     private fun extractEmails(url: String) {
         Thread {
-            try {
-                if (delaySeconds > 0) Thread.sleep(delaySeconds)
-                val doc = Jsoup.connect(url).get()
-                val emails = findEmails(doc.body().text())
+            handler.post {
+                webView.loadUrl(url)
+                webView.webViewClient = object : WebViewClient() {
+                    override fun onPageFinished(view: WebView?, url: String?) {
+                        handler.postDelayed({
+                            webView.evaluateJavascript("(function() { return document.body.innerText; })();") { result ->
+                                if (result != null && result != "null") {
+                                    val pageText = result.replace("\"", "")
+                                    val emails = findEmails(pageText)
 
-                handler.post {
-                    if (emails.isNotEmpty()) {
-                        val currentResults = loadResults() ?: ""
-                        val newResults = if (currentResults.isNotEmpty()) "$currentResults\n${emails.joinToString("\n")}" else emails.joinToString("\n")
-                        resultText.text = newResults
-                        saveResults(newResults)
-                    } else {
-                        resultText.append("\nNo emails found at $url")
+                                    handler.post {
+                                        if (emails.isNotEmpty()) {
+                                            val currentResults = loadResults() ?: ""
+                                            val newResults = if (currentResults.isNotEmpty()) "$currentResults\n${emails.joinToString("\n")}" else emails.joinToString("\n")
+                                            resultText.text = newResults
+                                            saveResults(newResults)
+                                        } else {
+                                            resultText.append("\nNo emails found at $url")
+                                        }
+                                    }
+                                } else {
+                                    handler.post {
+                                        resultText.append("\nError: Unable to load page content at $url")
+                                    }
+                                }
+                            }
+                        }, delaySeconds)
+                    }
+
+                    override fun onReceivedError(view: WebView?, errorCode: Int, description: String?, failingUrl: String?) {
+                        handler.post {
+                            resultText.append("\nError fetching $url: $description")
+                        }
                     }
                 }
-            } catch (e: Exception) {
-                handler.post { resultText.append("\nError fetching $url: ${e.message}") }
             }
         }.start()
     }
 
     private fun findEmails(text: String): List<String> {
         val emailRegex = Regex("[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}")
-        return emailRegex.findAll(text).map { it.value }.toList()
+        return emailRegex.findAll(text).map { it.value }.toList().distinct()
     }
 
     private fun isNumeric(str: String): Boolean {
@@ -152,22 +175,16 @@ class RangeUrlActivity : AppCompatActivity() {
     private fun saveResultsToFile(results: String) {
         try {
             val fileName = "email_results_${System.currentTimeMillis()}.txt"
-            val file = File(getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS), fileName)
+            val file = File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS), fileName)
             file.writeText(results)
-
-            val downloadManager = getSystemService(Context.DOWNLOAD_SERVICE) as DownloadManager
-            val uri = Uri.fromFile(file)
-            val request = DownloadManager.Request(uri).apply {
-                setTitle(fileName)
-                setDescription("Saving email results")
-                setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS, fileName)
-                setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED)
-                setAllowedNetworkTypes(DownloadManager.Request.NETWORK_WIFI or DownloadManager.Request.NETWORK_MOBILE)
-            }
-            downloadManager.enqueue(request)
             Toast.makeText(this, "Results saved to Downloads as $fileName", Toast.LENGTH_LONG).show()
         } catch (e: Exception) {
             Toast.makeText(this, "Error saving file: ${e.message}", Toast.LENGTH_LONG).show()
         }
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        webView.destroy()
     }
 }
