@@ -5,6 +5,8 @@ import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
 import android.view.View
+import android.webkit.WebResourceError
+import android.webkit.WebResourceRequest
 import android.webkit.WebView
 import android.webkit.WebViewClient
 import android.widget.Button
@@ -67,9 +69,10 @@ class BrowserActivity : AppCompatActivity() {
             settings.javaScriptEnabled = true
             settings.domStorageEnabled = true
             settings.userAgentString = "Mozilla/5.0 (Android; Mobile; rv:68.0) Gecko/68.0 Firefox/68.0"
-            setInitialScale(1) // Ensure proper scaling
-            isHorizontalScrollBarEnabled = true // Enable horizontal scrolling if needed
-            isVerticalScrollBarEnabled = true // Enable vertical scrolling
+            setInitialScale(1)
+            isHorizontalScrollBarEnabled = true
+            isVerticalScrollBarEnabled = true
+            isScrollContainer = false // Prevent WebView from interfering with ScrollView
         }
 
         resultText.text = loadResults() ?: ""
@@ -154,7 +157,7 @@ class BrowserActivity : AppCompatActivity() {
     private fun createWebViewClient(): WebViewClient {
         return object : WebViewClient() {
             override fun onPageFinished(view: WebView?, url: String?) {
-                if (isExtractingRange) return // Skip if extracting range URLs
+                if (isExtractingRange) return
                 handler.postDelayed({
                     extractEmails(url ?: "") {
                         progressBar.visibility = View.GONE
@@ -163,7 +166,25 @@ class BrowserActivity : AppCompatActivity() {
                 }, delaySeconds)
             }
 
-            override fun onReceivedError(view: WebView?, errorCode: Int, description: String?, failingUrl: String?) {
+            override fun onReceivedError(
+                view: WebView?,
+                request: WebResourceRequest?,
+                error: WebResourceError?
+            ) {
+                handler.post {
+                    resultText.append("\nError fetching ${request?.url}: ${error?.description}")
+                    progressBar.visibility = View.GONE
+                    goButton.isEnabled = true
+                }
+            }
+
+            @Suppress("DEPRECATION")
+            override fun onReceivedError(
+                view: WebView?,
+                errorCode: Int,
+                description: String?,
+                failingUrl: String?
+            ) {
                 handler.post {
                     resultText.append("\nError fetching $failingUrl: $description")
                     progressBar.visibility = View.GONE
