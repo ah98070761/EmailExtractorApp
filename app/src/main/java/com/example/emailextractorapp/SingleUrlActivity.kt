@@ -1,0 +1,88 @@
+package com.example.emailextractorapp
+
+import android.content.Intent
+import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
+import android.widget.Button
+import android.widget.EditText
+import android.widget.TextView
+import androidx.appcompat.app.AppCompatActivity
+import org.jsoup.Jsoup
+
+class SingleUrlActivity : AppCompatActivity() {
+
+    private lateinit var urlInput: EditText
+    private lateinit var extractButton: Button
+    private lateinit var resultText: TextView
+    private lateinit var switchButton: Button
+    private val handler = Handler(Looper.getMainLooper())
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        setContentView(R.layout.activity_single)
+
+        urlInput = findViewById(R.id.urlInput) ?: return showError("URL input not found")
+        extractButton = findViewById(R.id.extractButton) ?: return showError("Extract button not found")
+        resultText = findViewById(R.id.resultText) ?: return showError("Result text not found")
+        switchButton = findViewById(R.id.switchButton) ?: return showError("Switch button not found")
+
+        resultText.text = loadResults() ?: ""
+
+        extractButton.setOnClickListener {
+            val url = urlInput.text.toString().trim()
+            if (url.isNotEmpty()) {
+                extractEmails(url)
+            } else {
+                resultText.append("\nError: Please enter a URL")
+            }
+        }
+
+        switchButton.setOnClickListener {
+            startActivity(Intent(this, RangeUrlActivity::class.java))
+        }
+    }
+
+    private fun showError(message: String) {
+        setContentView(TextView(this).apply { text = message })
+    }
+
+    private fun extractEmails(url: String) {
+        Thread {
+            try {
+                val doc = Jsoup.connect(url).get()
+                val emails = findEmails(doc.body().text())
+
+                handler.post {
+                    if (emails.isNotEmpty()) {
+                        val currentResults = loadResults() ?: ""
+                        val newResults = if (currentResults.isNotEmpty()) "$currentResults\n${emails.joinToString("\n")}" else emails.joinToString("\n")
+                        resultText.text = newResults
+                        saveResults(newResults)
+                    } else {
+                        resultText.append("\nNo emails found at $url")
+                    }
+                }
+            } catch (e: Exception) {
+                handler.post { resultText.append("\nError fetching $url: ${e.message}") }
+            }
+        }.start()
+    }
+
+    private fun findEmails(text: String): List<String> {
+        val emailRegex = Regex("[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}")
+        return emailRegex.findAll(text).map { it.value }.toList()
+    }
+
+    private fun loadResults(): String? {
+        return getSharedPreferences("EmailExtractorAppPrefs", MODE_PRIVATE)
+            .getString("results", null)
+    }
+
+    private fun saveResults(results: String) {
+        getSharedPreferences("EmailExtractorAppPrefs", MODE_PRIVATE)
+            .edit()
+            .putString("results", results)
+            .apply()
+    }
+}
