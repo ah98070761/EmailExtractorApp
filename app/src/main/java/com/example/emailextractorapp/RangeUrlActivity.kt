@@ -12,7 +12,9 @@ import android.widget.EditText
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.FileProvider
 import java.io.File
+import java.io.FileWriter
 
 class RangeUrlActivity : AppCompatActivity() {
 
@@ -24,7 +26,7 @@ class RangeUrlActivity : AppCompatActivity() {
     private lateinit var delayInput: EditText
     private lateinit var setDelayButton: Button
     private lateinit var extractButton: Button
-    private lateinit var extractResultsButton: Button
+    private lateinit var shareResultsButton: Button
     private lateinit var deleteResultsButton: Button
     private lateinit var resultText: TextView
     private lateinit var switchButton: Button
@@ -44,7 +46,7 @@ class RangeUrlActivity : AppCompatActivity() {
         delayInput = findViewById(R.id.delayInput) ?: return showError("Delay input not found")
         setDelayButton = findViewById(R.id.setDelayButton) ?: return showError("Set delay button not found")
         extractButton = findViewById(R.id.extractButton) ?: return showError("Extract button not found")
-        extractResultsButton = findViewById(R.id.extractResultsButton) ?: return showError("Extract results button not found")
+        shareResultsButton = findViewById(R.id.extractResultsButton) ?: return showError("Share results button not found")
         deleteResultsButton = findViewById(R.id.deleteResultsButton) ?: return showError("Delete results button not found")
         resultText = findViewById(R.id.resultText) ?: return showError("Result text not found")
         switchButton = findViewById(R.id.switchButton) ?: return showError("Switch button not found")
@@ -87,12 +89,12 @@ class RangeUrlActivity : AppCompatActivity() {
             }
         }
 
-        extractResultsButton.setOnClickListener {
+        shareResultsButton.setOnClickListener {
             val results = resultText.text.toString()
             if (results.isNotEmpty()) {
-                saveResultsToFile(results)
+                shareResults(results)
             } else {
-                Toast.makeText(this, "No results to extract", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, "No results to share", Toast.LENGTH_SHORT).show()
             }
         }
 
@@ -173,14 +175,28 @@ class RangeUrlActivity : AppCompatActivity() {
             .apply()
     }
 
-    private fun saveResultsToFile(results: String) {
+    private fun shareResults(results: String) {
         try {
-            val fileName = "email_results_${System.currentTimeMillis()}.txt"
-            val file = File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS), fileName)
-            file.writeText(results)
-            Toast.makeText(this, "Results saved to Downloads as $fileName", Toast.LENGTH_LONG).show()
+            val file = File(cacheDir, "email_results_${System.currentTimeMillis()}.txt")
+            FileWriter(file).use { writer ->
+                writer.write(results)
+            }
+
+            val uri = FileProvider.getUriForFile(
+                this,
+                "${packageName}.provider",
+                file
+            )
+
+            val shareIntent = Intent(Intent.ACTION_SEND).apply {
+                type = "text/plain"
+                putExtra(Intent.EXTRA_STREAM, uri)
+                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+            }
+
+            startActivity(Intent.createChooser(shareIntent, "Share Results"))
         } catch (e: Exception) {
-            Toast.makeText(this, "Error saving file: ${e.message}", Toast.LENGTH_LONG).show()
+            Toast.makeText(this, "Error sharing file: ${e.message}", Toast.LENGTH_LONG).show()
         }
     }
 
