@@ -2,13 +2,14 @@ package com.example.emailextractorapp
 
 import android.content.Intent
 import android.os.Bundle
-import android.os.Environment
 import android.os.Handler
 import android.os.Looper
+import android.view.View
 import android.webkit.WebView
 import android.webkit.WebViewClient
 import android.widget.Button
 import android.widget.EditText
+import android.widget.ProgressBar
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
@@ -30,9 +31,11 @@ class RangeUrlActivity : AppCompatActivity() {
     private lateinit var deleteResultsButton: Button
     private lateinit var resultText: TextView
     private lateinit var switchButton: Button
+    private lateinit var progressBar: ProgressBar
     private lateinit var webView: WebView
     private val handler = Handler(Looper.getMainLooper())
     private var delaySeconds: Long = 0
+    private var currentResults = mutableSetOf<String>() // To store unique emails
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -50,6 +53,7 @@ class RangeUrlActivity : AppCompatActivity() {
         deleteResultsButton = findViewById(R.id.deleteResultsButton) ?: return showError("Delete results button not found")
         resultText = findViewById(R.id.resultText) ?: return showError("Result text not found")
         switchButton = findViewById(R.id.switchButton) ?: return showError("Switch button not found")
+        progressBar = findViewById(R.id.progressBar) ?: return showError("Progress bar not found")
 
         webView = WebView(this).apply {
             settings.javaScriptEnabled = true
@@ -77,9 +81,17 @@ class RangeUrlActivity : AppCompatActivity() {
                 val start = startId.toIntOrNull() ?: 0
                 val end = endId.toIntOrNull() ?: 0
                 if (start <= end) {
-                    for (i in start..end) {
-                        val fullUrl = if (baseUrl.isNotEmpty()) "$baseUrl$beforeId$i$afterId" else "$beforeId$i$afterId"
-                        extractEmails(fullUrl)
+                    progressBar.visibility = View.VISIBLE
+                    extractButton.isEnabled = false
+                    currentResults.clear() // Clear previous results for this extraction
+                    resultText.text = "" // Clear the display
+                    val urls = (start..end).map { i ->
+                        if (baseUrl.isNotEmpty()) "$baseUrl$beforeId$i$afterId" else "$beforeId$i$afterId"
+                    }
+                    progressBar.max = urls.size * 100 // For finer progress updates
+                    processUrls(urls, 0) {
+                        progressBar.visibility = View.GONE
+                        extractButton.isEnabled = true
                     }
                 } else {
                     resultText.append("\nError: Start ID must be less than or equal to end ID")
@@ -101,6 +113,7 @@ class RangeUrlActivity : AppCompatActivity() {
         deleteResultsButton.setOnClickListener {
             saveResults("")
             resultText.text = ""
+            currentResults.clear()
             Toast.makeText(this, "Results deleted", Toast.LENGTH_SHORT).show()
         }
 
@@ -113,7 +126,23 @@ class RangeUrlActivity : AppCompatActivity() {
         setContentView(TextView(this).apply { text = message })
     }
 
-    private fun extractEmails(url: String) {
+    private fun processUrls(urls: List<String>, index: Int, onComplete: () -> Unit) {
+        if (index >= urls.size) {
+            val finalResults = currentResults.joinToString("\n")
+            resultText.text = finalResults
+            saveResults(finalResults)
+            onComplete()
+            return
+        }
+
+        val url = urls[index]
+        extractEmails(url) {
+            progressBar.progress = ((index + 1) * 100) // Update progress
+            processUrls(urls, index + 1, onComplete) // Process next URL
+        }
+    }
+
+    private fun extractEmails(url: String, onComplete: () -> Unit) {
         Thread {
             handler.post {
                 webView.loadUrl(url)
@@ -124,20 +153,19 @@ class RangeUrlActivity : AppCompatActivity() {
                                 if (result != null && result != "null") {
                                     val pageText = result.replace("\"", "")
                                     val emails = findEmails(pageText)
-
                                     handler.post {
                                         if (emails.isNotEmpty()) {
-                                            val currentResults = loadResults() ?: ""
-                                            val newResults = if (currentResults.isNotEmpty()) "$currentResults\n${emails.joinToString("\n")}" else emails.joinToString("\n")
-                                            resultText.text = newResults
-                                            saveResults(newResults)
+                                            currentResults.addAll(emails) // Add unique emails
+                                            resultText.text = currentResults.joinToString("\n")
                                         } else {
                                             resultText.append("\nNo emails found at $url")
                                         }
+                                        onComplete()
                                     }
                                 } else {
                                     handler.post {
                                         resultText.append("\nError: Unable to load page content at $url")
+                                        onComplete()
                                     }
                                 }
                             }
@@ -147,6 +175,7 @@ class RangeUrlActivity : AppCompatActivity() {
                     override fun onReceivedError(view: WebView?, errorCode: Int, description: String?, failingUrl: String?) {
                         handler.post {
                             resultText.append("\nError fetching $url: $description")
+                            onComplete()
                         }
                     }
                 }
