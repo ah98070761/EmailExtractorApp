@@ -44,7 +44,7 @@
         android:id="@+id/extractResultsButton"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Extract Results to File"
+        android:text="Share Results"
         android:layout_gravity="center" />
 
     <Button
