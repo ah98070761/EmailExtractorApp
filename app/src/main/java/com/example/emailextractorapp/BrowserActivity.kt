@@ -7,6 +7,7 @@ import android.os.Looper
 import android.view.View
 import android.webkit.WebResourceError
 import android.webkit.WebResourceRequest
+import android.webkit.WebSettings
 import android.webkit.WebView
 import android.webkit.WebViewClient
 import android.widget.Button
@@ -63,7 +64,7 @@ class BrowserActivity : AppCompatActivity() {
         shareResultsButton = findViewById(R.id.extractResultsButton) ?: return showError("Share results button not found")
         deleteResultsButton = findViewById(R.id.deleteResultsButton) ?: return showError("Delete results button not found")
         resultText = findViewById(R.id.resultText) ?: return showError("Result text not found")
-        resultScrollView = resultText.parent as ScrollView // Access the ScrollView parent
+        resultScrollView = resultText.parent as ScrollView
         switchSingleButton = findViewById(R.id.switchSingleButton) ?: return showError("Switch single button not found")
         switchRangeButton = findViewById(R.id.switchRangeButton) ?: return showError("Switch range button not found")
         progressBar = findViewById(R.id.progressBar) ?: return showError("Progress bar not found")
@@ -71,8 +72,17 @@ class BrowserActivity : AppCompatActivity() {
         webView.apply {
             settings.javaScriptEnabled = true
             settings.domStorageEnabled = true
-            settings.userAgentString = "Mozilla/5.0 (Android; Mobile; rv:68.0) Gecko/68.0 Firefox/68.0"
-            setInitialScale(1)
+            settings.userAgentString = "Mozilla/5.0 (Linux; Android 9; Build/PPR1.180610.011) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.114 Mobile Safari/537.36"
+            settings.loadWithOverviewMode = true // Load page in overview mode (zoomed out to fit screen)
+            settings.useWideViewPort = true // Enable wide viewport to match device width
+            settings.builtInZoomControls = true // Enable pinch-to-zoom
+            settings.displayZoomControls = false // Hide zoom controls UI
+            settings.setSupportZoom(true) // Support zooming
+            settings.minimumFontSize = 1 // Prevent font scaling issues
+            settings.minimumLogicalFontSize = 1
+            settings.defaultFontSize = 16 // Match typical browser font size
+            settings.defaultFixedFontSize = 13
+            settings.layoutAlgorithm = WebSettings.LayoutAlgorithm.NORMAL // Use normal layout algorithm for better rendering
             isHorizontalScrollBarEnabled = true
             isVerticalScrollBarEnabled = true
             isScrollContainer = false
