@@ -17,6 +17,7 @@
             </intent-filter>
         </activity>
         <activity android:name=".RangeUrlActivity" />
+        <activity android:name=".BrowserActivity" />
         <provider
             android:name="androidx.core.content.FileProvider"
             android:authorities="${applicationId}.provider"
