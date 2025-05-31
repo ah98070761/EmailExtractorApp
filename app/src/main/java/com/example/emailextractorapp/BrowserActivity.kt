@@ -67,6 +67,9 @@ class BrowserActivity : AppCompatActivity() {
             settings.javaScriptEnabled = true
             settings.domStorageEnabled = true
             settings.userAgentString = "Mozilla/5.0 (Android; Mobile; rv:68.0) Gecko/68.0 Firefox/68.0"
+            setInitialScale(1) // Ensure proper scaling
+            isHorizontalScrollBarEnabled = true // Enable horizontal scrolling if needed
+            isVerticalScrollBarEnabled = true // Enable vertical scrolling
         }
 
         resultText.text = loadResults() ?: ""
