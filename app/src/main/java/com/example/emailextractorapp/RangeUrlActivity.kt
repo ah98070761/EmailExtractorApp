@@ -1,14 +1,20 @@
 package com.example.emailextractorapp
 
+import android.app.DownloadManager
+import android.content.Context
 import android.content.Intent
+import android.net.Uri
 import android.os.Bundle
+import android.os.Environment
 import android.os.Handler
 import android.os.Looper
 import android.widget.Button
 import android.widget.EditText
 import android.widget.TextView
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import org.jsoup.Jsoup
+import java.io.File
 
 class RangeUrlActivity : AppCompatActivity() {
 
@@ -17,10 +23,15 @@ class RangeUrlActivity : AppCompatActivity() {
     private lateinit var afterIdInput: EditText
     private lateinit var startIdInput: EditText
     private lateinit var endIdInput: EditText
-    private lateinit var extractButton: Button
-    private lateinit var resultText: TextView
-    private lateinit var switchButton: Button
+    private lateinit var delayInput: EditText
+    private lateinit setDelayButton: Button
+    private lateinit extractButton: Button
+    private lateinit extractResultsButton: Button
+    private lateinit deleteResultsButton: Button
+    private lateinit resultText: TextView
+    private lateinit switchButton: Button
     private val handler = Handler(Looper.getMainLooper())
+    private var delaySeconds: Long = 0
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -31,11 +42,21 @@ class RangeUrlActivity : AppCompatActivity() {
         afterIdInput = findViewById(R.id.afterIdInput) ?: return showError("After ID input not found")
         startIdInput = findViewById(R.id.startIdInput) ?: return showError("Start ID input not found")
         endIdInput = findViewById(R.id.endIdInput) ?: return showError("End ID input not found")
+        delayInput = findViewById(R.id.delayInput) ?: return showError("Delay input not found")
+        setDelayButton = findViewById(R.id.setDelayButton) ?: return showError("Set delay button not found")
         extractButton = findViewById(R.id.extractButton) ?: return showError("Extract button not found")
+        extractResultsButton = findViewById(R.id.extractResultsButton) ?: return showError("Extract results button not found")
+        deleteResultsButton = findViewById(R.id.deleteResultsButton) ?: return showError("Delete results button not found")
         resultText = findViewById(R.id.resultText) ?: return showError("Result text not found")
         switchButton = findViewById(R.id.switchButton) ?: return showError("Switch button not found")
 
         resultText.text = loadResults() ?: ""
+
+        setDelayButton.setOnClickListener {
+            val delay = delayInput.text.toString().trim()
+            delaySeconds = if (delay.isNotEmpty() && isNumeric(delay)) delay.toLong() * 1000 else 0
+            Toast.makeText(this, "Delay set to $delaySeconds ms", Toast.LENGTH_SHORT).show()
+        }
 
         extractButton.setOnClickListener {
             val baseUrl = baseUrlInput.text.toString().trim()
@@ -60,6 +81,21 @@ class RangeUrlActivity : AppCompatActivity() {
             }
         }
 
+        extractResultsButton.setOnClickListener {
+            val results = resultText.text.toString()
+            if (results.isNotEmpty()) {
+                saveResultsToFile(results)
+            } else {
+                Toast.makeText(this, "No results to extract", Toast.LENGTH_SHORT).show()
+            }
+        }
+
+        deleteResultsButton.setOnClickListener {
+            saveResults("")
+            resultText.text = ""
+            Toast.makeText(this, "Results deleted", Toast.LENGTH_SHORT).show()
+        }
+
         switchButton.setOnClickListener {
             startActivity(Intent(this, SingleUrlActivity::class.java))
         }
@@ -72,6 +108,7 @@ class RangeUrlActivity : AppCompatActivity() {
     private fun extractEmails(url: String) {
         Thread {
             try {
+                if (delaySeconds > 0) Thread.sleep(delaySeconds)
                 val doc = Jsoup.connect(url).get()
                 val emails = findEmails(doc.body().text())
 
@@ -110,5 +147,27 @@ class RangeUrlActivity : AppCompatActivity() {
             .edit()
             .putString("results", results)
             .apply()
+    }
+
+    private fun saveResultsToFile(results: String) {
+        try {
+            val fileName = "email_results_${System.currentTimeMillis()}.txt"
+            val file = File(getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS), fileName)
+            file.writeText(results)
+
+            val downloadManager = getSystemService(Context.DOWNLOAD_SERVICE) as DownloadManager
+            val uri = Uri.fromFile(file)
+            val request = DownloadManager.Request(uri).apply {
+                setTitle(fileName)
+                setDescription("Saving email results")
+                setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS, fileName)
+                setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED)
+                setAllowedNetworkTypes(DownloadManager.Request.NETWORK_WIFI or DownloadManager.Request.NETWORK_MOBILE)
+            }
+            downloadManager.enqueue(request)
+            Toast.makeText(this, "Results saved to Downloads as $fileName", Toast.LENGTH_LONG).show()
+        } catch (e: Exception) {
+            Toast.makeText(this, "Error saving file: ${e.message}", Toast.LENGTH_LONG).show()
+        }
     }
 }
